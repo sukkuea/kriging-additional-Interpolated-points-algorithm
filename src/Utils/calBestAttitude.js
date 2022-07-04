@@ -51,15 +51,15 @@ export const recursiveNode = (
 };
 
 export const calCulateAttitude = (nodes = [], variable) => {
-  const recursiveResult = recursiveNode(nodes, variable, 0);
-  const bestSumList = recursiveResult.map(({ bestSum }) => bestSum);
+  // const recursiveResult = recursiveNode(nodes, variable, 0);
+  // const bestSumList = recursiveResult.map(({ bestSum }) => bestSum);
   const range = createRangeTable(nodes); //transform range for each node
   let maxRange = findMaxRange(range);
   const data = calculateBestNuggetSillRange(range, maxRange, variable);
 
   const allRangeOfNodes = range.map(({ range }) => range);
   const result = {
-    bestSumList,
+    // bestSumList,
     bestSum: data.bestSum, //node attitue 31
     allRangeOfNodes,
     semiVarioGram: data.semiVarioGram,

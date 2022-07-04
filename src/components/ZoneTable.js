@@ -16,6 +16,7 @@ const models = (isShowConstant) => ([
 
 const ZoneBody = ({ zoneNumber, zoneBodyData, nodeLookupTable, isShowConstant, slopeList, inputSlope,
   errorAndSelectedModel, time }) => {
+
   const nodeId = zoneBodyData.id
   const predictAttitude = nodeLookupTable[nodeId].predictAttitude
   const isLessThjanInputSlope = inputSlope && slopeList[zoneNumber] > inputSlope

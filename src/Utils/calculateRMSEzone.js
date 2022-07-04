@@ -5,7 +5,7 @@ const reduceParser = (
       ...acc,
       {
         actual: next.attitude,
-        predicted: lookupTable[next.id].predictAttitude[model]
+        // predicted: lookupTable[next.id].predictAttitude[model]
       }
     ]
   }

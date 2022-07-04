@@ -80,10 +80,8 @@ export const withGenerateZone = (n, nodeLength, zone, variable, model, { semiVar
       selectedZone.push(randomGenerator({
         xMax, xMin, yMax, yMin, idTemp,
       }))
-      idTemp++;
       const {
         bestSum,
-        bestSumList,
         allRangeOfNodes,
         semiVarioGram
       } = memoizeCalCulateAttitude(selectedZone, variable)
@@ -91,7 +89,8 @@ export const withGenerateZone = (n, nodeLength, zone, variable, model, { semiVar
 
       semiVarioGramHash[i] = semiVarioGram
       allNodeRangeHash[i] = allRangeOfNodes
-      bestSumHash[i] = bestSumList
+      bestSumHash[idTemp] = bestSum
+      idTemp++;
     }
   }
   for (let i = 0; i < zoneKeys.length; i++) {
@@ -105,7 +104,7 @@ export const withGenerateZone = (n, nodeLength, zone, variable, model, { semiVar
 
     const trasnformNodesWithPredict = computePredict(
       selectedZone,
-      bestSumHash[i],
+      bestSumHash
     );
     newNode.push(...trasnformNodesWithPredict);
 

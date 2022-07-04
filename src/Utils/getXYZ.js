@@ -11,7 +11,7 @@ export default (data = [], key) =>
 
 export const getZ = (data = [], model) => {
   return data.reduce((acc, next) => {
-    const value = next.predictAttitude[model]
+    const value = next.predictAttitude[model] || next.attitude
     return [...acc, value]
   }, [])
 }

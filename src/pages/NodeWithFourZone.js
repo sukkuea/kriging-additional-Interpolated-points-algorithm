@@ -118,7 +118,7 @@ class NodeWithSeparate extends Component {
     this.setState({
       zones: zone
     })
-
+    const lastNodeId = nodes[nodes.length - 1].id
     const key = Object.keys(zone);
 
     const semiVarioGramHash = {}
@@ -128,15 +128,13 @@ class NodeWithSeparate extends Component {
     for (let i = 0; i < key.length; i++) {
       const selectedZone = zone[key[i]];
       const {
-        bestSumList,
+        bestSum,
         allRangeOfNodes,
         semiVarioGram,
       } = memoizeCalCulateAttitude(selectedZone, variable);
       semiVarioGramHash[i] = semiVarioGram
-
       allNodeRangeHash[i] = allRangeOfNodes
-      bestSumHash[i] = bestSumList
-
+      bestSumHash[lastNodeId] = bestSum
     }
 
     const {
@@ -337,17 +335,6 @@ class NodeWithSeparate extends Component {
         </div>
 
         <div className="graph">
-          {error && (
-            <>
-              <ErrorTable
-                error={error}
-                semiVarioGram={semiVarioGram}
-                variable={variable}
-              />
-
-              <NodeResultTable list={transformDataNode} />
-            </>
-          )}
           {scatterGraph && (
             <Plot
               data={scatterGraph}

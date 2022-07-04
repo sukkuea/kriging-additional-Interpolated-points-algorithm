@@ -6,7 +6,7 @@ export default (nodes, bestSumList = []) => {
       ...acc,
       {
         ...next,
-        predictAttitude: bestSumList[index], //{exponent:0,guassian:1}
+        predictAttitude: bestSumList[next.id] || 0, //{exponent:0,guassian:1}
       },
     ];
   }, []);
