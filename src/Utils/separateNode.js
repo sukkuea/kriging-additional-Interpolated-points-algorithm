@@ -1,4 +1,7 @@
-import { max, min } from 'simple-statistics';
+import memoize from 'fast-memoize';
+import { max, min, variance } from 'simple-statistics';
+import computePredict, { transformSemiVarioGramWithSeparateNode } from './computePredict';
+const memoizeTransformSemiVarioGramWithSeparateNode = memoize(transformSemiVarioGramWithSeparateNode)
 export const findCenter = (nodes) => {
   let tempX = 0;
   let tempY = 0;
@@ -14,6 +17,106 @@ export const findCenter = (nodes) => {
     meanY: tempY / nodes.length,
   };
 };
+export const randomGenerator = ({ xMax, xMin, yMax, yMin, idTemp, }) => {
+  const latitude = Math.random() * (xMax - xMin + 1) + xMin
+  const longtitude = Math.random() * (yMax - yMin + 1) + yMin
+
+  return {
+    isGenerate: true,
+    longtitude,
+    latitude,
+    attitude: 0,
+    id: idTemp
+  }
+}
+export const getMinMaxLatAndLon = (zone) => {
+  const zoneKeys = Object.keys(zone)
+
+  const minAndMaxPerZone = zoneKeys.reduce((acc, next, index) => {
+    const nodes = zone[next];
+    const latArr = nodes.map((node) => node.latitude) //x [1,2,3] => max = 3 min =1
+    const lonArr = nodes.map((node) => node.longtitude)//y
+    const xMax = max(latArr) //[1,2,3] = 3
+    const xMin = min(latArr)
+    const yMax = max(lonArr)
+    const yMin = min(lonArr)
+    return {
+      ...acc,
+      [next]: {
+        xMax,
+        xMin,
+        yMax,
+        yMin,
+      }
+    }
+  }, {})
+  return minAndMaxPerZone
+}
+
+export const withGenerateZone = (n, nodeLength, zone, variable, model, { semiVarioGramHash, allNodeRangeHash, bestSumHash }) => memoizeCalCulateAttitude => {
+
+  const lengthPerZone = Math.ceil(nodeLength / (n * n)) * 2;
+  const zoneKeys = Object.keys(zone)
+  const minAndMaxPerZone = getMinMaxLatAndLon(zone);
+
+  let idTemp = nodeLength + 1;
+  let semiVarioGramTemp = {
+    exponential: [],
+    exponentialWithConstant: [],
+    exponentialWithKIteration: [],
+    gaussian: [],
+    linear: [],
+    pentaspherical: [],
+    spherical: [],
+    trendline: [],
+  };
+  const allRangeOfNodesTemp = []
+  const newNode = []
+  for (let i = 0; i < zoneKeys.length; i++) {
+    const selectedZone = zone[zoneKeys[i]]
+    const generateZoneLength = lengthPerZone - selectedZone.length
+    const { xMax, xMin, yMax, yMin, } = minAndMaxPerZone[i];
+    for (let j = 0; j < generateZoneLength; j++) {
+      selectedZone.push(randomGenerator({
+        xMax, xMin, yMax, yMin, idTemp,
+      }))
+      idTemp++;
+      const {
+        bestSum,
+        bestSumList,
+        allRangeOfNodes,
+        semiVarioGram
+      } = memoizeCalCulateAttitude(selectedZone, variable)
+      selectedZone[selectedZone.length - 1].attitude = bestSum[model]
+
+      semiVarioGramHash[i] = semiVarioGram
+      allNodeRangeHash[i] = allRangeOfNodes
+      bestSumHash[i] = bestSumList
+    }
+  }
+  for (let i = 0; i < zoneKeys.length; i++) {
+    const selectedZone = zone[zoneKeys[i]]
+    semiVarioGramTemp = memoizeTransformSemiVarioGramWithSeparateNode(
+      semiVarioGramHash[i],
+      semiVarioGramTemp
+    );
+
+    allRangeOfNodesTemp.push(...allNodeRangeHash[i])
+
+    const trasnformNodesWithPredict = computePredict(
+      selectedZone,
+      bestSumHash[i],
+    );
+    newNode.push(...trasnformNodesWithPredict);
+
+  }
+
+  return {
+    allRangeOfNodesTemp,
+    semiVarioGramTemp,
+    newNode,
+  }
+}
 
 export const separateZone = (nodes, center) => {
   const { meanX, meanY } = center;

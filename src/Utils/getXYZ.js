@@ -2,7 +2,6 @@ export default (data = [], key) =>
   data.reduce((acc, next) => {
     const value = next[key];
     if (key === "attitude") {
-      console.log(data)
       return [...acc, value];
     }
     return [...acc, value];
