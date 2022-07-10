@@ -7,9 +7,7 @@ import Loader from "react-loader-spinner";
 import * as XLSX from "xlsx";
 import getXYZ, { getZ } from "../Utils/getXYZ";
 import { getAllErrorModel } from "../Utils/getStatError";
-import computePredict, {
-  transformSemiVarioGramWithSeparateNode,
-} from "../Utils/computePredict";
+
 import createScatterGraph from "../Utils/createScatterGraph";
 import { Chart } from "react-google-charts";
 import getTrendlines from "../Utils/getTrendlines";
@@ -17,13 +15,14 @@ import getTrendlines from "../Utils/getTrendlines";
 import ErrorTable from "../components/ErrorTable";
 import NodeResultTable from "../components/NodeResultTable";
 import { Link } from "react-router-dom";
-import { findCenter, separateZone } from "../Utils/separateNode";
+import { findCenter, separateZone, withGenerateZone } from "../Utils/separateNode";
 import ZoneTable from "../components/ZoneTable";
 import ButtonExportExel from "./ButtonGroupExportExcel";
 import dayjs from "dayjs";
 import { buttonList } from "../Utils/config";
 
 const memoizeCalCulateAttitude = memoize(calCulateAttitude);
+const memoizeWithGenerateZone = memoize(withGenerateZone)
 class NodeWithSeparate extends Component {
   state = {
     nodes: [{ id: 1, latitude: "", longtitude: "", attitude: "" }],
@@ -37,7 +36,9 @@ class NodeWithSeparate extends Component {
       range: "",
     },
     zones: [],
-    slope: ''
+    slope: '',
+    model: 'gaussian',
+    labelModel: 'Gussian Model'
   };
 
   addNode = () => {
@@ -117,46 +118,30 @@ class NodeWithSeparate extends Component {
     this.setState({
       zones: zone
     })
-
+    const lastNodeId = nodes[nodes.length - 1].id
     const key = Object.keys(zone);
-    const newNode = [];
-    const allRangeOfNodesTemp = [];
-    let semiVarioGramTemp = {
-      exponential: [],
-      exponentialWithConstant: [],
-      exponentialWithKIteration: [],
-      gaussian: [],
-      linear: [],
-      pentaspherical: [],
-      spherical: [],
-      trendline: [],
-    };
+
+    const semiVarioGramHash = {}
+    const allNodeRangeHash = {}
+    const bestSumHash = {}
 
     for (let i = 0; i < key.length; i++) {
       const selectedZone = zone[key[i]];
       const {
-        bestSumList,
+        bestSum,
         allRangeOfNodes,
         semiVarioGram,
       } = memoizeCalCulateAttitude(selectedZone, variable);
-
-      semiVarioGramTemp = transformSemiVarioGramWithSeparateNode(
-        semiVarioGram,
-        semiVarioGramTemp
-      );
-
-      allRangeOfNodesTemp.push(...allRangeOfNodes);
-
-      const listId = selectedZone.map(({ id }) => id);
-
-      const trasnformNodesWithPredict = computePredict(
-        selectedZone,
-        bestSumList,
-        listId
-      );
-      newNode.push(...trasnformNodesWithPredict);
+      semiVarioGramHash[i] = semiVarioGram
+      allNodeRangeHash[i] = allRangeOfNodes
+      bestSumHash[lastNodeId] = bestSum
     }
 
+    const {
+      allRangeOfNodesTemp,
+      semiVarioGramTemp,
+      newNode,
+    } = memoizeWithGenerateZone(2, nodes.length, zone, variable, this.state.model, { semiVarioGramHash, allNodeRangeHash, bestSumHash })(memoizeCalCulateAttitude)
     this.setState({
       allRangeOfNodes: allRangeOfNodesTemp,
       semiVarioGram: semiVarioGramTemp,
@@ -223,7 +208,7 @@ class NodeWithSeparate extends Component {
       : false;
 
     const trendlineData = isAllNodeHavePredict
-      ? getTrendlines(allRangeOfNodes, semiVarioGram["gaussian"]).filter(([a, b]) => b !== 1)
+      ? getTrendlines(allRangeOfNodes, semiVarioGram[model]).filter(([a, b]) => b !== 1)
       : [];
 
     const data = [["Distance", "Semivariance"], ...trendlineData];
@@ -350,17 +335,6 @@ class NodeWithSeparate extends Component {
         </div>
 
         <div className="graph">
-          {error && (
-            <>
-              <ErrorTable
-                error={error}
-                semiVarioGram={semiVarioGram}
-                variable={variable}
-              />
-
-              <NodeResultTable list={transformDataNode} />
-            </>
-          )}
           {scatterGraph && (
             <Plot
               data={scatterGraph}

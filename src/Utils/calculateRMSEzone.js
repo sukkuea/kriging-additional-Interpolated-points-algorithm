@@ -5,12 +5,11 @@ const reduceParser = (
       ...acc,
       {
         actual: next.attitude,
-        predicted: lookupTable[next.id].predictAttitude[model]
+        // predicted: lookupTable[next.id].predictAttitude[model]
       }
     ]
   }
 export const getZoneRMSE = (zones, lookupTable) => {
-  console.log({ zones, lookupTable })
 
   const groupModelExponential = zones.reduce(reduceParser(
     lookupTable,
@@ -65,7 +64,6 @@ export const getZoneRMSE = (zones, lookupTable) => {
     'trendline': rmseTrendlinel,
   }
   let key = Object.keys(errors).reduce((key, v) => errors[v] < errors[key] ? v : key);
-  console.log(errors, key)
   return {
     errors,
     key

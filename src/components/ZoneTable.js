@@ -16,6 +16,7 @@ const models = (isShowConstant) => ([
 
 const ZoneBody = ({ zoneNumber, zoneBodyData, nodeLookupTable, isShowConstant, slopeList, inputSlope,
   errorAndSelectedModel, time }) => {
+
   const nodeId = zoneBodyData.id
   const predictAttitude = nodeLookupTable[nodeId].predictAttitude
   const isLessThjanInputSlope = inputSlope && slopeList[zoneNumber] > inputSlope
@@ -73,11 +74,7 @@ const ZoneTable = ({ zones, nodes, isShowConstant, inputSlope, startTime = dayjs
     minutes,
     hours
   }
-  console.log(errorAndKeyEachZone)
-  // {
-  //   1 :[],
-  //   2: [],
-  // }
+
   const getSlopeZone = zoneKeys.reduce((acc, next) => {
     const nodesOfZone = zones[next]
     const latArr = nodesOfZone.map(n => Number(n.latitude))
